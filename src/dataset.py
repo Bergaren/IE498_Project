@@ -19,11 +19,13 @@ class CaptionDataset(Dataset):
 		image_ids,
 		image_files,
 		word_idx,
+		masks,
 		transform=None):
 
 		self.image_ids = image_ids
 		self.image_files = image_files
 		self.word_idx = word_idx
+		self.masks = masks
 		self.transform = transform
 
 
@@ -36,16 +38,33 @@ class CaptionDataset(Dataset):
 			idx = idx.toList()
 		images = self.image_files[idx]
 		captions = self.word_idx[idx]
-		sample = {"images": images, "captions": captions}
-
+		masks = self.masks[idx]
+		sample = {"images": images, "captions": captions, "masks": masks}
 		return sample
 		
 
-
-
-# TODO: Save and retrieve preporcessed directly if avaiable
-
 def prepare_train_data(config):
+	"""
+		If all is done => Load directly and return dataset
+	"""
+
+	if os.path.exists(config.vocabulary_file) and os.path.exists(config.temp_annotation_file) and os.path.exists(config.temp_data_file):
+
+		print("Loading all data...")
+		annotations = pd.read_csv(config.temp_annotation_file)
+		captions = annotations['caption'].values
+		image_ids = annotations['image_id'].values
+		image_files = annotations['image_file'].values
+
+		data = np.load(config.temp_data_file, allow_pickle=True).item()
+		word_idxs = data['word_idxs']
+		masks = data['masks']
+
+		print("Building dataset...")
+		dataset = CaptionDataset(image_ids, image_files, word_idxs, masks, None)
+		return dataset
+
+	
 	""" Prepare the data for training the model. """
 	coco = COCO(config.train_caption_file)
 	coco.filter_by_cap_len(config.max_caption_length)
@@ -104,7 +123,7 @@ def prepare_train_data(config):
 	print("Number of captions = %d" %(len(captions)))
 
 	print("Building the dataset...")
-	dataset = CaptionDataset(image_ids, image_files, word_idxs, None)
+	dataset = CaptionDataset(image_ids, image_files, word_idxs, masks, None)
 	print("Dataset built.")
 	return dataset
 
@@ -113,4 +132,4 @@ if __name__ == "__main__":
 	from config import Config
 
 	c = Config()
-	d = preparte_train_data(c)
+	d = prepare_train_data(c)

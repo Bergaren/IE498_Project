@@ -2,7 +2,7 @@ import torch
 from model import ImageCpationer
 from config import Config
 from tqdm import tqdm 
-from dataset import DataSet, prepare_train_data
+from dataset import CaptionDataset, prepare_train_data
 from torch.utils.data import DataLoader
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
