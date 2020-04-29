@@ -5,48 +5,47 @@ import os
 import pandas as pd
 from tqdm import tqdm
 
+from torch.utils.data import Dataset, DataLoader
+import torch
 
 """
 Adopted from https://github.com/nikhilmaram/Show_and_Tell.git
 """
 
-# TODO: Convert to pytorch dataloader
+# TODO: Implement transforms and load images
 
-class DataSet():
+class CaptionDataset(Dataset):
 	def __init__(self,
-				image_ids,
-				image_files,
-				batch_size,
-				word_idxs=None,
-				masks=None,
-				is_train=False,
-				shuffle=False):
-		self.image_ids = np.array(image_ids)
-		self.image_files = np.array(image_files)
-		self.word_idxs = np.array(word_idxs)
-		self.masks = np.array(masks)
-		self.batch_size = batch_size
-		self.is_train = is_train
-		self.shuffle = shuffle
-		self.setup()
+		image_ids,
+		image_files,
+		word_idx,
+		transform=None):
+
+		self.image_ids = image_ids
+		self.image_files = image_files
+		self.word_idx = word_idx
+		self.transform = transform
 
 
-	def setup(self):
-		""" Setup the dataset. """
-		self.count = len(self.image_ids)
-		self.num_batches = int(np.ceil(self.count * 1.0 / self.batch_size))
-		self.fake_count = self.num_batches * self.batch_size - self.count
-		self.idxs = list(range(self.count))
-		self.reset()
+	def __len__(self):
+		return len(self.image_files)
 
-	def reset(self):
-		""" Reset the dataset. """
-		self.current_idx = 0
-		if self.shuffle:
-			np.random.shuffle(self.idxs)
+	
+	def __getitem__(self, idx):
+		if torch.is_tensor(idx):
+			idx = idx.toList()
+		images = self.image_files[idx]
+		captions = self.word_idx[idx]
+		sample = {"images": images, "captions": captions}
+
+		return sample
+		
 
 
-def preparte_train_data(config):
+
+# TODO: Save and retrieve preporcessed directly if avaiable
+
+def prepare_train_data(config):
 	""" Prepare the data for training the model. """
 	coco = COCO(config.train_caption_file)
 	coco.filter_by_cap_len(config.max_caption_length)
@@ -105,13 +104,7 @@ def preparte_train_data(config):
 	print("Number of captions = %d" %(len(captions)))
 
 	print("Building the dataset...")
-	dataset = DataSet(image_ids,
-					  image_files,
-					  config.batch_size,
-					  word_idxs,
-					  masks,
-					  True,
-					  True)
+	dataset = CaptionDataset(image_ids, image_files, word_idxs, None)
 	print("Dataset built.")
 	return dataset
 
