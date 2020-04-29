@@ -286,7 +286,7 @@ class COCO:
             tic = time.time()
             fname = os.path.join(tarDir, img['file_name'])
             if not os.path.exists(fname):
-                urllib.urlretrieve(img['coco_url'], fname)
+                urllib.request.urlretrieve(img['coco_url'], fname)
             print('downloaded %d/%d images (t=%.1fs)'%(i, N, time.time()- tic))
 
     def process_dataset(self):
