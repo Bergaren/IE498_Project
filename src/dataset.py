@@ -1,5 +1,6 @@
 from utils.coco.coco import COCO
 from utils.vocabulary import Vocabulary
+from utils.misc import ImageLoader
 import numpy as np
 import os
 import pandas as pd
@@ -27,6 +28,7 @@ class CaptionDataset(Dataset):
 		self.word_idx = word_idx
 		self.masks = masks
 		self.transform = transform
+		self.imageloader = ImageLoader("./utils/ilsvrc_2012_mean.npy")
 
 
 	def __len__(self):
@@ -36,7 +38,7 @@ class CaptionDataset(Dataset):
 	def __getitem__(self, idx):
 		if torch.is_tensor(idx):
 			idx = idx.toList()
-		images = self.image_files[idx]
+		images = self.imageloader.load_image(self.image_files[idx])
 		captions = self.word_idx[idx]
 		masks = self.masks[idx]
 		sample = {"images": images, "captions": captions, "masks": masks}
