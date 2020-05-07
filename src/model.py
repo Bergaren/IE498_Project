@@ -22,28 +22,32 @@ class ImageCaptioner(nn.Module):
 		# Får inputen från tidigare LSTM, behövs inte på första eftersom då får vi info från encodern.
 		self.embedd = nn.Embedding(self.config.vocabulary_size, self.config.dim_embedding)
 		# The LSTM cell
-		self.rnn_model = nn.LSTM( input_size = self.config.dim_embedding,
-								 hidden_size = self.config.num_lstm_units, 
-								 num_layers = self.config.num_initalize_layers )
+		self.rnn_model = nn.LSTMCell( input_size = self.config.dim_embedding,
+								 hidden_size = self.config.num_lstm_units)
 	
 		# Mappar outputen från tidigare LSTM cell till ett ord.
 		self.fc = nn.Linear(self.config.dim_embedding, self.config.vocabulary_size)
 
-	def forward(self, x):
+	def forward(self, x, captions):
 		sentence = []
 		for i in range(self.config.max_caption_length):
+			
 			if i == 0:
 				### Osäker om det "self.config.batch_size" dim
 				# Memory
-				h = torch.zeros(self.config.batch_size, self.config.num_lstm_units)
-				c = torch.zeros(self.config.batch_size, self.config.num_lstm_units)
+				h = torch.zeros(self.config.batch_size, self.config.num_lstm_units).cuda()
+				c = torch.zeros(self.config.batch_size, self.config.num_lstm_units).cuda()
 
 				x = self.vgg16(x)
+				x =x.resize(self.config.batch_size, 8, self.config.dim_embedding)
+				x = torch.mean(x, 1)
+				
 			else:
-				x = self.embedd(x)
-			
-			x, (h,c) = self.rnn_model(x, (h, c))
-			x = self.fc(x)
+				x = self.embedd(captions[:, i])
+			#x = x.view(-1, x.shape[0], x.shape[1])
+			h,c = self.rnn_model(x, (h, c))
+			#print(f"H: {h.shape}, C:{c.shape}, X:{x.shape}")
+			x = self.fc(h)
 			sentence.append( torch.max(x, dim=1) )
 		return sentence
 
@@ -53,7 +57,8 @@ class ImageCaptioner(nn.Module):
 			param.requires_grad = False
 		### Ändrar sista lagret så att det passar med input size av RNN.
 		### Sista lagret måste omtränas eftersom det init random
-		model.classifier._modules['6'] = nn.Linear(model.classifier._modules['6'].in_features, self.config.dim_embedding)
+		model.classifier._modules['6'] = nn.Linear(model.classifier._modules['6'].in_features, 8*self.config.dim_embedding)
+	
 		return model
 
 	def train(self):

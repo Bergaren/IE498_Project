@@ -32,7 +32,7 @@ class Config(object):
 
 		# about the optimization
 		self.num_epochs = 100
-		self.batch_size = 32
+		self.batch_size = 4
 		self.optimizer = 'Adam'    # 'Adam', 'RMSProp', 'Momentum' or 'SGD'
 		self.initial_learning_rate = 0.0001
 		self.learning_rate_decay_factor = 1.0
