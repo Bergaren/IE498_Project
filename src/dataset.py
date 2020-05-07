@@ -21,8 +21,8 @@ class CaptionDataset(Dataset):
 	def __init__(self,
 		image_ids,
 		image_files,
-		word_idx,
-		masks,
+		word_idx=None,
+		masks=None,
 		transform=None):
 
 		self.image_ids = image_ids
@@ -47,6 +47,28 @@ class CaptionDataset(Dataset):
 		sample = {"images": images, "captions": captions, "masks": masks}
 		return sample
 		
+class CaptionEvalDataset(Dataset):
+	def __init__(self,
+		image_ids,
+		image_files,
+		transform=None):
+
+		self.image_ids = image_ids
+		self.image_files = image_files
+		self.transform = transform
+		self.imageloader = ImageLoader("./utils/ilsvrc_2012_mean.npy")
+
+	def __len__(self):
+		return len(self.image_files)
+
+	
+	def __getitem__(self, idx):
+		if torch.is_tensor(idx):
+			idx = idx.toList()
+		#print(self.image_files[idx])
+		images = self.imageloader.load_image(self.image_files[idx])
+		sample = {"images": images, "image_ids": self.image_ids[idx]}
+		return sample
 
 def prepare_train_data(config):
 	"""
@@ -132,6 +154,38 @@ def prepare_train_data(config):
 	print("Dataset built.")
 	return dataset
 
+
+def prepare_eval_data(config):
+	""" Prepare the data for evaluating the model. """
+	coco = COCO(config.eval_caption_file)
+	image_ids = list(coco.imgs.keys())
+	image_files = [os.path.join(config.eval_image_dir,
+								coco.imgs[image_id]['file_name'])
+								for image_id in image_ids]
+
+	print("Building the vocabulary...")
+	if os.path.exists(config.vocabulary_file):
+		vocabulary = Vocabulary(config.vocabulary_size,
+								config.vocabulary_file)
+	else:
+		vocabulary = build_vocabulary(config)
+	print("Vocabulary built.")
+	print("Number of words = %d" %(vocabulary.size))
+
+	print("Building the dataset...")
+	dataset = CaptionEvalDataset(image_ids, image_files)
+	print("Dataset built.")
+	return coco, dataset, vocabulary
+
+def build_vocabulary(config):
+	""" Build the vocabulary from the training data and save it to a file. """
+	coco = COCO(config.train_caption_file)
+	coco.filter_by_cap_len(config.max_caption_length)
+
+	vocabulary = Vocabulary(config.vocabulary_size)
+	vocabulary.build(coco.all_captions())
+	vocabulary.save(config.vocabulary_file)
+	return vocabulary
 
 if __name__ == "__main__":
 	from config import Config
