@@ -4,10 +4,11 @@ from utils.misc import ImageLoader
 import numpy as np
 import os
 import pandas as pd
+import nltk
 from tqdm import tqdm
-
 from torch.utils.data import Dataset, DataLoader
 import torch
+nltk.download('punkt')
 
 """
 Adopted from https://github.com/nikhilmaram/Show_and_Tell.git
@@ -38,6 +39,7 @@ class CaptionDataset(Dataset):
 	def __getitem__(self, idx):
 		if torch.is_tensor(idx):
 			idx = idx.toList()
+		#print(self.image_files[idx])
 		images = self.imageloader.load_image(self.image_files[idx])
 		captions = self.word_idx[idx]
 		masks = self.masks[idx]
