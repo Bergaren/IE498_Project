@@ -21,7 +21,7 @@ train loop
 TODO: load batches from dataset and feed to network
 """
 
-upSample = nn.Upsample(scale_factor=7, mode="bilinear")
+#upSample = nn.Upsample(scale_factor=7, mode="bilinear")
 
 for e in tqdm(range(config.num_epochs)):
 	for i, b in enumerate(loader):

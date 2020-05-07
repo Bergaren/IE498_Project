@@ -8,7 +8,7 @@ import nltk
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 import torch
-nltk.download('punkt')
+#nltk.download('punkt')
 
 """
 Adopted from https://github.com/nikhilmaram/Show_and_Tell.git
