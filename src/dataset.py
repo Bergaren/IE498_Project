@@ -15,6 +15,7 @@ Adopted from https://github.com/nikhilmaram/Show_and_Tell.git
 """
 
 # TODO: Implement transforms and load images
+# Transforms currently handeled using opencv in utils/misc.py - maybe change to torch transforms? 
 
 class CaptionDataset(Dataset):
 	def __init__(self,
