@@ -12,7 +12,7 @@ class Config(object):
 		self.cnn = 'vgg16'               # 'vgg16' or 'resnet50'
 		self.max_caption_length = 20
 		self.dim_embedding = 512
-		self.num_lstm_units = 512
+		self.num_lstm_units = 256#512
 		self.num_initalize_layers = 1 ## Changed from 2 to 1    # 1 or 2
 		self.dim_initalize_layer = 512
 		self.num_attend_layers = 2       # 1 or 2

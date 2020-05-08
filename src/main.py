@@ -30,7 +30,7 @@ TODO: load batches from dataset and feed to network
 """
 
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr = config.initial_learning_rate)
+optimizer = torch.optim.RMSprop(model.parameters(), lr = config.initial_learning_rate)
 model.train()
 for e in range(config.num_epochs):
 	hits = 0
@@ -44,11 +44,13 @@ for e in range(config.num_epochs):
 
 		captions = batch["captions"]
 		captions = Variable(torch.LongTensor(captions.long())).to(device)
-		scores = model(images, captions, train = True)
+		scores = model(images, captions)
 
 		loss = criterion(scores.permute(1, 2, 0), captions)
 		
 		loss.backward()
+		torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip_gradients)
+
 		optimizer.step()
 
 		masks = batch["masks"]
@@ -59,10 +61,11 @@ for e in range(config.num_epochs):
 	# SAVE MODEL
 	
 	if (e+1) // config.save_period == 0:
-		torch.save(model, config.save_model)
+		torch.save(model, config.save_dir)
 	
-
+"""
 with torch.no_grad():
+	model = torch.load(config.save_dir)
 	model.eval()
 	results = []
 	for batch in tqdm(test_loader):
@@ -89,7 +92,7 @@ with torch.no_grad():
 	scorer.evaluate()
 	print("Evaluation complete.")
 
-
+"""
 		
 
 
