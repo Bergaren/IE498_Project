@@ -47,8 +47,8 @@ class Config(object):
 		self.epsilon = 1e-6
 
 		# about the saver
-		self.save_period = 1000
-		self.save_dir = './models/'
+		self.save_period = 3
+		self.save_dir = './models/rnn.model'
 		self.summary_dir = './summary/'
 
 		# about the vocabulary

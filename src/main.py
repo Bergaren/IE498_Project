@@ -30,19 +30,19 @@ TODO: load batches from dataset and feed to network
 """
 
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.RMSprop(model.parameters(), lr = config.initial_learning_rate)
-""" model.train()
+optimizer = torch.optim.Adam(model.parameters(), lr = config.initial_learning_rate)
+model.train()
 for e in range(config.num_epochs):
 	hits = 0
-	for b in tqdm(train_loader):
+	for batch in tqdm(train_loader):
 		optimizer.zero_grad()
 
-		images = b["images"]
+		images = batch["images"]
 		images = Variable(torch.FloatTensor(images.float()))
 		images = images.permute(0,3,1,2)
 		images = images.to(device)
 
-		captions = b["captions"]
+		captions = batch["captions"]
 		captions = Variable(torch.LongTensor(captions.long())).to(device)
 		scores = model(images, captions, train = True)
 
@@ -51,17 +51,22 @@ for e in range(config.num_epochs):
 		loss.backward()
 		optimizer.step()
 
-		masks = b["masks"]
+		masks = batch["masks"]
 		pred = torch.argmax(scores, dim  = 2)
 		hits += pred.permute(1, 0).eq(captions).int().sum()
 	
-	print("Epoch %d achieved training accuracy of: %f" % (e+1,hits.item()*100.0/len(train_loader))) """
+	print("Epoch %d achieved training accuracy of: %f" % (e+1,hits.item()*100.0/len(train_loader)))
+	# SAVE MODEL
+	
+	if (e+1) // config.save_period == 0:
+		torch.save(model, config.save_model)
+	
 
 with torch.no_grad():
-	model.training = False
+	model.eval()
 	results = []
-	for b in tqdm(test_loader):
-		images = b["images"]
+	for batch in tqdm(test_loader):
+		images = batch["images"]
 		images = Variable(torch.FloatTensor(images.float()))
 		images = images.permute(0,3,1,2)
 		images = images.to(device)
@@ -71,7 +76,7 @@ with torch.no_grad():
 		for i in range(pred.shape[1]):
 			results.append({
 				"caption": str(vocabulary.get_sentence(pred[:, i])), 
-				"image_id": int(b["image_ids"][i].item())
+				"image_id": int(batch["image_ids"][i].item())
 			})
 
 	# Write generated captions to result file		

@@ -58,11 +58,11 @@ class ImageCaptioner(nn.Module):
 		for i in range(self.config.max_caption_length):
 			
 			if i == 0:
-				h = torch.zeros(self.config.batch_size, self.config.num_lstm_units).cuda()
-				c = torch.zeros(self.config.batch_size, self.config.num_lstm_units).cuda()
+				h = torch.zeros(x.shape[0], self.config.num_lstm_units).cuda()
+				c = torch.zeros(x.shape[0], self.config.num_lstm_units).cuda()
 
 				x = self.vgg16(x)
-				x = x.reshape(self.config.batch_size, 8, self.config.dim_embedding)
+				x = x.reshape(x.shape[0], 8, self.config.dim_embedding)
 				x = torch.mean(x, 1)
 				
 			else:
@@ -79,11 +79,11 @@ class ImageCaptioner(nn.Module):
 		for i in range(self.config.max_caption_length):
 			
 			if i == 0:
-				h = torch.zeros(self.config.batch_size, self.config.num_lstm_units).cuda()
-				c = torch.zeros(self.config.batch_size, self.config.num_lstm_units).cuda()
+				h = torch.zeros(x.shape[0], self.config.num_lstm_units).cuda()
+				c = torch.zeros(x.shape[0], self.config.num_lstm_units).cuda()
 
 				x = self.vgg16(x)
-				x = x.reshape(self.config.batch_size, 8, self.config.dim_embedding)
+				x = x.reshape(x.shape[0], 8, self.config.dim_embedding)
 				x = torch.mean(x, 1)
 			else: 
 				x = self.embedd(pred_word)
@@ -104,8 +104,5 @@ class ImageCaptioner(nn.Module):
 		### Sista lagret måste omtränas eftersom det init random
 		model.classifier._modules['6'] = nn.Linear(model.classifier._modules['6'].in_features, 8*self.config.dim_embedding)
 		return model
-
-	def train(self):
-		pass
 
 ### NOTE: "The above loss is minimized w.r.t. all the parameters of theLSTM, the top layer of the image embedder CNN and word embedding We"
