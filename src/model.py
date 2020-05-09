@@ -46,7 +46,7 @@ class ImageCaptioner(nn.Module):
 								 hidden_size = self.config.num_lstm_units)
 	
 		# Mappar outputen från tidigare LSTM cell till ett ord.
-		self.decoder = nn.Linear(self.config.dim_embedding, self.config.vocabulary_size)
+		self.decoder = nn.Linear(self.config.num_lstm_units, self.config.vocabulary_size)
 		self.dropout = LockedDropout(self.config.lstm_drop_rate)
 
 	def forward(self, x, captions=None):
@@ -58,9 +58,11 @@ class ImageCaptioner(nn.Module):
 		for i in range(self.config.max_caption_length):
 			
 			if i == 0:
+				# Reset States
 				h = torch.zeros(x.shape[0], self.config.num_lstm_units).cuda()
 				c = torch.zeros(x.shape[0], self.config.num_lstm_units).cuda()
-
+				self.dropout.reset_state()
+				
 				x = self.vgg16(x)
 				x = x.reshape(x.shape[0], 8, self.config.dim_embedding)
 				x = torch.mean(x, 1)
