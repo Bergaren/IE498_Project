@@ -38,6 +38,7 @@ TODO: input arguments decide training/testing + model load
 def train():
 	criterion = nn.CrossEntropyLoss()
 	optimizer = torch.optim.RMSprop(model.parameters(), lr = config.initial_learning_rate)
+	total_loss = 0.0
 	model.train()
 	for e in range(config.num_epochs):
 		hits = 0
@@ -54,7 +55,8 @@ def train():
 			scores = model(images, captions)
 
 			loss = criterion(scores.permute(1, 2, 0), captions)
-			
+			total_loss += loss.item()
+
 			loss.backward()
 			torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip_gradients)
 
@@ -64,7 +66,7 @@ def train():
 			pred = torch.argmax(scores, dim  = 2)
 			hits += pred.permute(1, 0).eq(captions).int().sum()
 		
-		print("Epoch %d achieved training accuracy of: %f" % (e+1,hits.item()*100.0/len(train_loader)))
+		print("Epoch %d achieved training accuracy of: %f and average loss of: %f" % (e+1,hits.item()*100.0/len(train_loader)), total_loss/len(train_loader))
 		# SAVE MODEL
 		
 		if (e+1) % config.save_period == 0:
