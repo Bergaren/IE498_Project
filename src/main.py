@@ -83,10 +83,12 @@ def evaulate():
 		pred = model(images, captions = None)
 			
 		for i in range(pred.shape[1]):
-			results.append({
+			result = {
 				"caption": str(vocabulary.get_sentence(pred[:, i])), 
 				"image_id": int(batch["image_ids"][i].item())
-			})
+			}
+			print(result)
+			results.append(result)
 
 	# Write generated captions to result file		
 	with open(config.eval_result_file, "w") as resfile:
