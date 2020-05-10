@@ -66,7 +66,7 @@ def train():
 			pred = torch.argmax(scores, dim  = 2)
 			hits += pred.permute(1, 0).eq(captions).int().sum()
 		
-		print("Epoch %d achieved training accuracy of: %f and average loss of: %f" % (e+1,hits.item()*100.0/len(train_loader)), total_loss/len(train_loader))
+		print("Epoch %d achieved training accuracy of: %f and average loss of: %f" % (e+1,hits.item()*100.0/len(train_loader), total_loss/len(train_loader)))
 		# SAVE MODEL
 		
 		if (e+1) % config.save_period == 0:
@@ -89,7 +89,7 @@ def evaulate():
 				"caption": str(vocabulary.get_sentence(pred[:, i])), 
 				"image_id": int(batch["image_ids"][i].item())
 			}
-			print(result)
+			#print(result)
 			results.append(result)
 
 	# Write generated captions to result file		

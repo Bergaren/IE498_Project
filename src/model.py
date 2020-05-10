@@ -8,6 +8,7 @@ import torchvision
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+from torch.nn import functional as F
 
 """
 The CNN portion of the model 
@@ -92,8 +93,8 @@ class ImageCaptioner(nn.Module):
 				
 			h,c = self.rnn_model(x, (h, c))
 			score = self.decoder(h)
-			pred_word = torch.argmax(score, dim = 1)	
-
+			print(F.softmax(score, dim=1))
+			pred_word = torch.multinomial(F.softmax(score, dim = 1), 1).squeeze()
 			predictions.append(pred_word)
 				
 		return torch.stack(predictions)
