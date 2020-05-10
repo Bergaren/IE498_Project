@@ -54,19 +54,16 @@ def train():
 			captions = Variable(torch.LongTensor(captions.long())).to(device)
 			scores = model(images, captions)
 
-			loss = criterion(scores.permute(1, 2, 0), captions)
+			#loss = criterion(scores.permute(0, 2, 1), captions)
+			loss = criterion(scores.view(-1, config.vocabulary_size), captions.view(-1))
 			total_loss += loss.item()
 
 			loss.backward()
 			torch.nn.utils.clip_grad_norm_(model.parameters(), config.clip_gradients)
 
 			optimizer.step()
-
-			masks = batch["masks"]
-			pred = torch.argmax(scores, dim  = 2)
-			hits += pred.permute(1, 0).eq(captions).int().sum()
 		
-		print("Epoch %d achieved training accuracy of: %f and average loss of: %f" % (e+1,hits.item()*100.0/len(train_loader)), total_loss/len(train_loader))
+		print("Epoch %d - average loss: %f" % (e+1, total_loss/len(train_loader)))
 		# SAVE MODEL
 		
 		if (e+1) % config.save_period == 0:
