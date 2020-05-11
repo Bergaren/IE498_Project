@@ -20,15 +20,15 @@ class Config(object):
 
 		# about the optimization
 		self.num_epochs = 100
-		self.batch_size = 32
+		self.batch_size = 64
 		self.optimizer = 'Adam'    # 'Adam', 'RMSProp', 'Momentum' or 'SGD'
 		self.initial_learning_rate = 0.0001
 		self.learning_rate_decay_factor = 1.0
 		self.clip_gradients = 5.0
 
 		# about the saver
-		self.save_period = 3
-		self.save_dir = './models/rnn.model'
+		self.save_period = 2
+		self.save_dir = './models/rnn_adam.model'
 
 		# about the vocabulary
 		self.vocabulary_file = DATA_BASE_DIR + 'vocabulary.csv'

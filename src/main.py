@@ -38,10 +38,11 @@ TODO: input arguments decide training/testing + model load
 def train():
 	criterion = nn.CrossEntropyLoss()
 	optimizer = torch.optim.RMSprop(model.parameters(), lr = config.initial_learning_rate)
-	total_loss = 0.0
+
 	model.train()
 	for e in range(config.num_epochs):
 		hits = 0
+		total_loss = 0.0
 		for batch in tqdm(train_loader):
 			optimizer.zero_grad()
 
@@ -86,7 +87,7 @@ def evaulate():
 				"caption": str(vocabulary.get_sentence(pred[:, i])), 
 				"image_id": int(batch["image_ids"][i].item())
 			}
-			print(result)
+		#	print(result)
 			results.append(result)
 
 	# Write generated captions to result file		

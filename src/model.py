@@ -51,9 +51,9 @@ class ImageCaptioner(nn.Module):
 		if not self.training:
 			return self.evaluate(x)
 		x = self.vgg16(x)
-		captions = self.embedd(captions)
+		captions = self.embedd(captions[:, :-1])
 
-		x = torch.cat((x.unsqueeze(1), captions[:, 1:]), dim=1)
+		x = torch.cat((x.unsqueeze(1), captions), dim=1)
 		out, _ = self.rnn(x)
 		out = self.decoder(out)
 		return out
@@ -67,7 +67,9 @@ class ImageCaptioner(nn.Module):
 			out, state = self.rnn(inputs, state)
 			out = out.squeeze(1)
 			out = self.decoder(out)
+			#print(torch.topk(out, 10)[1])
 			pred = torch.argmax(out, dim=1)
+			#pred = torch.multinomial(torch.nn.functional.softmax(out, dim=1), 1).squeeze()
 			predictions.append(pred)
 			inputs = self.embedd(pred).unsqueeze(1)
 
