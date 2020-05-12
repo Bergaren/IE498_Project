@@ -1,5 +1,31 @@
 # IE498_Project
 
+
+## Prel. Results
+
+After **10** epochs of training:
+
+Epoch | Loss
+------|------
+1 | 1.841061
+2 | 1.493707
+3 | 1.408885
+4 | 1.360092
+5 | 1.326156
+6 | 1.300284
+7 | 1.279234
+8 | 1.261251
+9 | 1.245867
+10 | 1.232213
+
+metric | score
+------|------
+`Bleu_1` | 0.659
+`Bleu_2` | 0.476
+`Bleu_3` | 0.333
+`Bleu_4` | 0.234
+
+
 Project Report: [Link to overleaf](https://www.overleaf.com/2839924692cpzssjdybsby)
 
 Repo from paper: [Link to repo](https://github.com/nikhilmaram/Show_and_Tell.git)
