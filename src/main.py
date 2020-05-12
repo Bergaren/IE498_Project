@@ -3,7 +3,7 @@ import torch.nn as nn
 from model import ImageCaptioner
 from config import Config
 from tqdm import tqdm 
-from dataset import CaptionDataset, prepare_train_data, prepare_eval_data
+from dataset import CaptionDataset, prepare_train_data, prepare_eval_data, prepare_sample_data
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from utils.coco.pycocoevalcap.eval import COCOEvalCap
@@ -26,9 +26,11 @@ else:
 
 train_data = prepare_train_data(config)
 coco, eval_data, vocabulary = prepare_eval_data(config)
+sample_data = prepare_sample_data(config)
 
 train_loader = DataLoader(train_data, shuffle=True, batch_size=config.batch_size, num_workers=8)
 test_loader = DataLoader(eval_data, shuffle=False, batch_size=config.batch_size, num_workers=8)
+sample_loader = DataLoader(sample_data, shuffle=False, batch_size = config.batch_size, num_workers=8)
 
 """
 train loop
@@ -99,8 +101,29 @@ def evaulate():
 	scorer = COCOEvalCap(coco, eval_result_coco)
 	scorer.evaluate()
 	print("Evaluation complete.")
-		
+
+def test():
+	model.eval()
+	for batch in tqdm(sample_loader):
+		images = batch["images"]
+		images = Variable(torch.FloatTensor(images.float()))
+		images = images.permute(0,3,1,2)
+		images = images.to(device)
+
+		pred = model(images, captions=None)
+
+		for i in range(pred.shape[1]):
+			result = {
+				"caption": str(vocabulary.get_sentence(pred[:, i])),
+				"img": batch["image_files"][i]
+			}
+
+			print(result)
+
+
 if argv[2] == "eval":
 	evaulate()
-else:
+elif argv[2] == "train":
 	train()
+else:
+	test()

@@ -70,6 +70,23 @@ class CaptionEvalDataset(Dataset):
 		sample = {"images": images, "image_ids": self.image_ids[idx]}
 		return sample
 
+class CaptionTestDataset(Dataset):
+	def __init__(self, image_files, transforms=None):
+		self.image_files = image_files
+		self.transforms = transforms
+		self.imageloader = ImageLoader("./utils/ilsvrc_2012_mean.npy")
+	
+	def __len__(self):
+		return len(self.image_files)
+
+	def __getitem__(self, idx):
+		if torch.is_tensor(idx):
+			idx = idx.toList()
+		images = self.imageloader.load_image(self.image_files[idx])
+		sample = {"images": images, "image_files": self.image_files[idx]}
+		return sample
+
+
 def prepare_train_data(config):
 	"""
 		If all is done => Load directly and return dataset
@@ -177,6 +194,12 @@ def prepare_eval_data(config):
 	print("Dataset built.")
 	return coco, dataset, vocabulary
 
+def prepare_sample_data(config):
+	image_files = os.listdir(config.test_image_dir)
+	image_files = [os.path.join(config.test_image_dir, filename) for filename in image_files]
+	dataset = CaptionTestDataset(image_files)
+	return dataset
+
 def build_vocabulary(config):
 	""" Build the vocabulary from the training data and save it to a file. """
 	coco = COCO(config.train_caption_file)
@@ -189,6 +212,6 @@ def build_vocabulary(config):
 
 if __name__ == "__main__":
 	from config import Config
-
+	print("running...")
 	c = Config()
-	d = prepare_train_data(c)
+	d = prepare_sample_data(c)
