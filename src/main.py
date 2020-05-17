@@ -10,6 +10,11 @@ from utils.coco.pycocoevalcap.eval import COCOEvalCap
 import json
 from sys import argv
 
+"""
+Main program containing training and eval loops
+"""
+
+
 if len(argv) < 3:
 	print("Supply arguments: load|new train|eval")
 
@@ -32,11 +37,10 @@ train_loader = DataLoader(train_data, shuffle=True, batch_size=config.batch_size
 test_loader = DataLoader(eval_data, shuffle=False, batch_size=config.batch_size, num_workers=8)
 sample_loader = DataLoader(sample_data, shuffle=False, batch_size = config.batch_size, num_workers=8)
 
+
 """
 train loop
-TODO: input arguments decide training/testing + model load
 """
-
 def train():
 	criterion = nn.CrossEntropyLoss()
 	optimizer = torch.optim.RMSprop(model.parameters(), lr = config.initial_learning_rate)
@@ -57,7 +61,6 @@ def train():
 			captions = Variable(torch.LongTensor(captions.long())).to(device)
 			scores = model(images, captions)
 
-			#loss = criterion(scores.permute(0, 2, 1), captions)
 			loss = criterion(scores.view(-1, config.vocabulary_size), captions.view(-1))
 			total_loss += loss.item()
 
@@ -72,6 +75,10 @@ def train():
 		if (e+1) % config.save_period == 0:
 			torch.save(model, config.save_dir)
 
+
+""" 
+Eval loop
+"""
 
 def evaulate():
 	model.eval()

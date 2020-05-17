@@ -15,45 +15,25 @@ In the paper a pretrained vgg16 net is used.
 Available in pytorch.
 """
 
-
-class LockedDropout(nn.Module):
-	def __init__(self, p=0.5):
-		super(LockedDropout,self).__init__()
-		self.m = None
-		self.p = p
-
-	def reset_state(self):
-		self.m = None
-
-	def forward(self, x, train_sess=True):
-		if train_sess==False:
-			return x
-		if(self.m is None):
-			self.m = x.data.new(x.size()).bernoulli_(1 - self.p)
-		mask = Variable(self.m, requires_grad=False) / (1 - self.p)
-
-		return mask * x
-
 class ImageCaptioner(nn.Module):
 	def __init__(self, config):
 		super(ImageCaptioner, self).__init__()
 		self.config = config
 		self.vgg16 = self.create_encoder()
-		# Får inputen från tidigare LSTM, behövs inte på första eftersom då får vi info från encodern.
 		self.embedd = nn.Embedding(self.config.vocabulary_size, self.config.dim_embedding)
-		# The LSTM cell
 		self.rnn = nn.LSTM(input_size=config.dim_embedding, hidden_size=config.num_lstm_units, batch_first=True)
-		# Mappar outputen från tidigare LSTM cell till ett ord.
 		self.decoder = nn.Linear(self.config.num_lstm_units, self.config.vocabulary_size)
-		self.dropout = LockedDropout(self.config.lstm_drop_rate)
 
 	def forward(self, x, captions=None):
 		if not self.training:
 			return self.evaluate(x)
+		# Run the image through the CNN 
 		x = self.vgg16(x)
-		captions = self.embedd(captions[:, :-1])
 
+		# Concatenate the representation of the image with the embeddings of the tokens in the caption
+		captions = self.embedd(captions[:, :-1])
 		x = torch.cat((x.unsqueeze(1), captions), dim=1)
+
 		out, _ = self.rnn(x)
 		out = self.decoder(out)
 		return out
@@ -63,25 +43,31 @@ class ImageCaptioner(nn.Module):
 		predictions = []
 		inputs = self.vgg16(x).unsqueeze(1)
 		state = None
+
+		# For sampling new captions, the representation of the image is first fed through the RNN
+		# For each step the predicited word is the one with highest probability
+		# The predicted word is then used as input for the following iteration 
 		for i in range(self.config.max_caption_length):
 			out, state = self.rnn(inputs, state)
 			out = out.squeeze(1)
 			out = self.decoder(out)
-			#print(torch.topk(out, 10)[1])
+
 			pred = torch.argmax(out, dim=1)
-			#pred = torch.multinomial(torch.nn.functional.softmax(out, dim=1), 1).squeeze()
 			predictions.append(pred)
 			inputs = self.embedd(pred).unsqueeze(1)
 
-		return torch.stack(predictions)
+		return torch.stack(predictions) # Return the generated caption
 
 	def create_encoder(self):
+		# A pretrained vgg16 net with batch normalization is loaded 
+		# The parameters are locked
 		model = torchvision.models.vgg16_bn(pretrained=True)
 		for param in model.parameters():
 			param.requires_grad = False
-		### Ändrar sista lagret så att det passar med input size av RNN.
-		### Sista lagret måste omtränas eftersom det init random
+		
+		# The last layer is modified in order to accomodate for the desired output dimensions
+		# As the last layer is changed it also unlocked and will be affected by training.
 		model.classifier._modules['6'] = nn.Linear(model.classifier._modules['6'].in_features, self.config.dim_embedding)
 		return model
 
-### NOTE: "The above loss is minimized w.r.t. all the parameters of theLSTM, the top layer of the image embedder CNN and word embedding We"
+# NOTE: "The above loss is minimized w.r.t. all the parameters of theLSTM, the final layer of the CNN, the decoding layer ad the embedding layer"

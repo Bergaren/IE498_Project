@@ -1,5 +1,6 @@
 """
 Adopted from: https://github.com/nikhilmaram/Show_and_Tell.git
+Configuration file containing hyperparameters and file locations for saving/loading
 """
 
 
@@ -18,13 +19,13 @@ class Config(object):
 
 		# about the optimization
 		self.num_epochs = 100
-		self.batch_size = 64
+		self.batch_size = 32
 		self.initial_learning_rate = 0.0001
 		self.clip_gradients = 5.0
 
 		# about the saver
 		self.save_period = 2
-		self.save_dir = './models/rnn_dropout.model'
+		self.save_dir = './models/rnn.model'
 
 		# about the vocabulary
 		self.vocabulary_file = DATA_BASE_DIR + 'vocabulary.csv'

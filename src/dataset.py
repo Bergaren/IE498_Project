@@ -8,27 +8,26 @@ import nltk
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 import torch
-#nltk.download('punkt')
 
 """
 Adopted from https://github.com/nikhilmaram/Show_and_Tell.git
+Reimplemented for usage with pytorch Dataloader
 """
 
-# TODO: Implement transforms and load images
-# Transforms currently handeled using opencv in utils/misc.py - maybe change to torch transforms? 
 
+"""
+Class used for the training data in conjuction with a dataloader
+"""
 class CaptionDataset(Dataset):
 	def __init__(self,
 		image_ids,
 		image_files,
 		word_idx=None,
-		masks=None,
 		transform=None):
 
 		self.image_ids = image_ids
 		self.image_files = image_files
 		self.word_idx = word_idx
-		self.masks = masks
 		self.transform = transform
 		self.imageloader = ImageLoader("./utils/ilsvrc_2012_mean.npy")
 
@@ -43,10 +42,12 @@ class CaptionDataset(Dataset):
 		#print(self.image_files[idx])
 		images = self.imageloader.load_image(self.image_files[idx])
 		captions = self.word_idx[idx]
-		masks = self.masks[idx]
-		sample = {"images": images, "captions": captions, "masks": masks}
+		sample = {"images": images, "captions": captions}
 		return sample
 		
+""" 
+Class used for the eval data in conjuction with a dataloader
+"""
 class CaptionEvalDataset(Dataset):
 	def __init__(self,
 		image_ids,
@@ -70,6 +71,9 @@ class CaptionEvalDataset(Dataset):
 		sample = {"images": images, "image_ids": self.image_ids[idx]}
 		return sample
 
+"""
+Class used for testing images outside of MSCOCO eval set
+"""
 class CaptionTestDataset(Dataset):
 	def __init__(self, image_files, transforms=None):
 		self.image_files = image_files
@@ -102,10 +106,9 @@ def prepare_train_data(config):
 
 		data = np.load(config.temp_data_file, allow_pickle=True).item()
 		word_idxs = data['word_idxs']
-		masks = data['masks']
 
 		print("Building dataset...")
-		dataset = CaptionDataset(image_ids, image_files, word_idxs, masks, None)
+		dataset = CaptionDataset(image_ids, image_files, word_idxs, None)
 		return dataset
 
 	
@@ -144,30 +147,24 @@ def prepare_train_data(config):
 
 	if not os.path.exists(config.temp_data_file):
 		word_idxs = []
-		masks = []
 		for caption in tqdm(captions):
 			current_word_idxs_ = vocabulary.process_sentence(caption)
 			current_num_words = len(current_word_idxs_)
 			current_word_idxs = np.zeros(config.max_caption_length,
 										 dtype = np.int32)
-			current_masks = np.zeros(config.max_caption_length)
 			current_word_idxs[:current_num_words] = np.array(current_word_idxs_)
-			current_masks[:current_num_words] = 1.0
 			word_idxs.append(current_word_idxs)
-			masks.append(current_masks)
 		word_idxs = np.array(word_idxs)
-		masks = np.array(masks)
-		data = {'word_idxs': word_idxs, 'masks': masks}
+		data = {'word_idxs': word_idxs}
 		np.save(config.temp_data_file, data)
 	else:
 		data = np.load(config.temp_data_file, allow_pickle=True).item()
 		word_idxs = data['word_idxs']
-		masks = data['masks']
 	print("Captions processed.")
 	print("Number of captions = %d" %(len(captions)))
 
 	print("Building the dataset...")
-	dataset = CaptionDataset(image_ids, image_files, word_idxs, masks, None)
+	dataset = CaptionDataset(image_ids, image_files, word_idxs, None)
 	print("Dataset built.")
 	return dataset
 
