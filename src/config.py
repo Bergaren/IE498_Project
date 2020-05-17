@@ -9,21 +9,17 @@ class Config(object):
 	""" Wrapper class for various (hyper)parameters. """
 	def __init__(self):
 		# about the model architecture
-		self.cnn = 'vgg16'               # 'vgg16' or 'resnet50'
 		self.max_caption_length = 20
 		self.dim_embedding = 512
 		self.num_lstm_units = 512
 
 		# about the weight initialization and regularization
-		self.fc_drop_rate = 0.5
 		self.lstm_drop_rate = 0.3
 
 		# about the optimization
 		self.num_epochs = 100
 		self.batch_size = 64
-		self.optimizer = 'Adam'    # 'Adam', 'RMSProp', 'Momentum' or 'SGD'
 		self.initial_learning_rate = 0.0001
-		self.learning_rate_decay_factor = 1.0
 		self.clip_gradients = 5.0
 
 		# about the saver
