@@ -28,7 +28,7 @@ class Config(object):
 
 		# about the saver
 		self.save_period = 2
-		self.save_dir = './models/rnn_adam.model'
+		self.save_dir = './models/rnn_dropout.model'
 
 		# about the vocabulary
 		self.vocabulary_file = DATA_BASE_DIR + 'vocabulary.csv'
@@ -45,7 +45,7 @@ class Config(object):
 		self.eval_image_dir = DATA_BASE_DIR + 'val/images/'
 		self.eval_caption_file = DATA_BASE_DIR + 'val/captions_val2014.json'
 		self.eval_result_dir = DATA_BASE_DIR + 'val/results/'
-		self.eval_result_file = DATA_BASE_DIR + 'val/results.json'
+		self.eval_result_file = DATA_BASE_DIR + 'val/results_dropout.json'
 		self.save_eval_result_as_image = False
 
 		# about the testing
